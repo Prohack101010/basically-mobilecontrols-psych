@@ -183,6 +183,12 @@ class TypedMobileButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 	 */
 	var _spriteLabel:FlxSprite;
 
+	/**
+	 * A hint shits, did you expect something?
+	 */
+	public var hintUp:FlxSprite;
+	public var hintDown:FlxSprite;
+
 	/** 
 	 * We don't need an ID here, so let's just use `Int` as the type.
 	 */
@@ -256,6 +262,8 @@ class TypedMobileButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 	{
 		label = FlxDestroyUtil.destroy(label);
 		_spriteLabel = null;
+		hintUp = null;
+		hintDown = null;
 
 		onUp = FlxDestroyUtil.destroy(onUp);
 		onDown = FlxDestroyUtil.destroy(onDown);
@@ -312,6 +320,18 @@ class TypedMobileButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 			_spriteLabel.cameras = cameras;
 			_spriteLabel.draw();
 		}
+
+		if (hintUp != null && hintUp.visible)
+		{
+			hintUp.cameras = cameras;
+			hintUp.draw();
+		}
+
+		if (hintDown != null && hintDown.visible)
+		{
+			hintDown.cameras = cameras;
+			hintDown.draw();
+		}
 	}
 
 	#if FLX_DEBUG
@@ -324,6 +344,10 @@ class TypedMobileButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 
 		if (_spriteLabel != null)
 			_spriteLabel.drawDebug();
+		if (hintUp != null)
+			hintUp.drawDebug();
+		if (hintDown != null)
+			hintDown.drawDebug();
 	}
 	#end
 
@@ -576,6 +600,10 @@ class TypedMobileButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 		super.updateHitbox();
 		if (_spriteLabel != null)
 			_spriteLabel.updateHitbox();
+		if (hintUp != null)
+			hintUp.updateHitbox();
+		if (hintDown != null)
+			hintDown.updateHitbox();
 	}
 
 	inline function get_justReleased():Bool

@@ -178,8 +178,8 @@ class JoyStick extends FlxSpriteGroup
 	{
 		base = new FlxSprite(0, 0);
 
-		var xmlFile:String = MobileInputHandler.mobileFolderPath + 'JoyStick/joystick.xml';
-		var pngFile:String = MobileInputHandler.mobileFolderPath + 'JoyStick/joystick.png';
+		var xmlFile:String = MobileConfig.mobileFolderPath + 'JoyStick/joystick.xml';
+		var pngFile:String = MobileConfig.mobileFolderPath + 'JoyStick/joystick.png';
 		#if BSM_FILE_SUPPORT
 		var xmlAndPngExists:Bool = false;
 		if(FileSystem.exists(xmlFile) && FileSystem.exists(pngFile)) xmlAndPngExists = true;
@@ -207,8 +207,8 @@ class JoyStick extends FlxSpriteGroup
 	{
 		thumb = new FlxSprite(0,0);
 
-		var xmlFile:String = MobileInputHandler.mobileFolderPath + 'JoyStick/joystick.xml';
-		var pngFile:String = MobileInputHandler.mobileFolderPath + 'JoyStick/joystick.png';
+		var xmlFile:String = MobileConfig.mobileFolderPath + 'JoyStick/joystick.xml';
+		var pngFile:String = MobileConfig.mobileFolderPath + 'JoyStick/joystick.png';
 		#if BSM_FILE_SUPPORT
 		var xmlAndPngExists:Bool = false;
 		if(FileSystem.exists(xmlFile) && FileSystem.exists(pngFile)) xmlAndPngExists = true;

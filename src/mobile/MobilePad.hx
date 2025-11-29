@@ -17,12 +17,20 @@ import flixel.FlxCamera;
  */
 @:access(mobile.MobileButton)
 class MobilePad extends MobileInputHandler {
+	public var onButtonDown:FlxTypedSignal<(MobileButton, Array<String>) -> Void> = new FlxTypedSignal<(MobileButton, Array<String>) -> Void>();
+	public var onButtonUp:FlxTypedSignal<(MobileButton, Array<String>) -> Void> = new FlxTypedSignal<(MobileButton, Array<String>) -> Void>();
+	public var instance:MobileInputHandler;
 	public var DPads:Array<MobileButton> = [];
 	public var Actions:Array<MobileButton> = [];
-	public var getButtonIndexFromName:Map<String, Int> = [];
-	public var getButtonFromName:Map<String, MobileButton> = [];
-	public var instance:MobileInputHandler;
+	public var buttonIndexFromName:Map<String, Int> = [];
+	public var buttonFromName:Map<String, MobileButton> = [];
 	public var buttonCameras(get, set):Array<FlxCamera>;
+	
+	public function getButtonIndexFromName(btnName:String)
+		return buttonIndexFromName.get(btnName);
+
+	public function getButtonFromName(btnName:String)
+		return buttonFromName.get(btnName);
 	
 	@:noCompletion
 	function get_buttonCameras():Array<FlxCamera>
@@ -56,11 +64,10 @@ class MobilePad extends MobileInputHandler {
 
 		if (DPad != "NONE")
 		{
-			if (!MobileInputHandler.dpadModes.exists(DPad))
+			if (!MobileConfig.dpadModes.exists(DPad))
 				throw 'The mobilePad dpadMode "$DPad" doesn\'t exists.';
 
-			var countedIndex:Int = 0;
-			for (buttonData in MobileInputHandler.dpadModes.get(DPad).buttons)
+			for (buttonData in MobileConfig.dpadModes.get(DPad).buttons)
 			{
 				if (buttonData.scale == null) buttonData.scale = 1.0;
 				var buttonName:String = buttonData.button;
@@ -71,24 +78,16 @@ class MobilePad extends MobileInputHandler {
 				var buttonX:Float = buttonData.x;
 				var buttonY:Float = buttonData.y;
 
-				var button:MobileButton = new MobileButton(0, 0);
-				button = createVirtualButton(buttonIDs, buttonX, buttonY, buttonGraphic, buttonScale, Util.colorFromString(buttonColor));
-				button.name = buttonName;
-				DPads.push(button);
-				add(button);
-				getButtonFromName.set(buttonName, button);
-				getButtonIndexFromName.set(buttonName, countedIndex);
-				countedIndex++;
+				addButton(buttonName, buttonIDs, buttonX, buttonY, buttonGraphic, buttonScale, Util.colorFromString(buttonColor), 'DPad');
 			}
 		}
 
 		if (Action != "NONE")
 		{
-			if (!MobileInputHandler.actionModes.exists(Action))
+			if (!MobileConfig.actionModes.exists(Action))
 				throw 'The mobilePad actionMode "$Action" doesn\'t exists.';
 
-			var countedIndex:Int = 0;
-			for (buttonData in MobileInputHandler.actionModes.get(Action).buttons)
+			for (buttonData in MobileConfig.actionModes.get(Action).buttons)
 			{
 				if (buttonData.scale == null) buttonData.scale = 1.0;
 				var buttonName:String = buttonData.button;
@@ -99,14 +98,7 @@ class MobilePad extends MobileInputHandler {
 				var buttonX:Float = buttonData.x;
 				var buttonY:Float = buttonData.y;
 
-				var button:MobileButton = new MobileButton(0, 0);
-				button = createVirtualButton(buttonIDs, buttonX, buttonY, buttonGraphic, buttonScale, Util.colorFromString(buttonColor));
-				button.name = buttonName;
-				Actions.push(button);
-				add(button);
-				getButtonFromName.set(buttonName, button);
-				getButtonIndexFromName.set(buttonName, countedIndex);
-				countedIndex++;
+				addButton(buttonName, buttonIDs, buttonX, buttonY, buttonGraphic, buttonScale, Util.colorFromString(buttonColor), 'Action');
 			}
 		}
 
@@ -117,14 +109,33 @@ class MobilePad extends MobileInputHandler {
 		instance = this;
 	}
 
+	public var countedDPadIndex:Int = 0;
+	public var countedActionIndex:Int = 0;
+	public function addButton(buttonName:String, buttonIDs:Array<String>, buttonX:Float, buttonY:Float, buttonGraphic:String, ?buttonScale:Float = 1.0, ?buttonColor:Int = 0xFFFFFF, indexType:String = 'DPad') {
+		var button:MobileButton = new MobileButton(0, 0);
+		button = createVirtualButton(buttonIDs, buttonX, buttonY, buttonGraphic, buttonScale, buttonColor);
+		button.name = buttonName;
+		Actions.push(button);
+		add(button);
+		buttonFromName.set(buttonName, button);
+		switch (indexType.toUpperCase()) {
+			case 'DPAD':
+				buttonIndexFromName.set(buttonName, countedDPadIndex);
+				countedDPadIndex++;
+			case 'ACTION':
+				buttonIndexFromName.set(buttonName, countedActionIndex);
+				countedActionIndex++;
+		}
+	}
+
 	public function createVirtualButton(buttonIDs:Array<String>, x:Float, y:Float, framePath:String, ?scale:Float = 1.0, ?ColorS:Int = 0xFFFFFF):MobileButton {
 		var frames:FlxGraphic;
 
-		final path:String = MobileInputHandler.mobileFolderPath + 'MobilePad/Textures/$framePath.png';
+		final path:String = MobileConfig.mobileFolderPath + 'MobilePad/Textures/$framePath.png';
 		if(Assets.exists(path))
 			frames = FlxGraphic.fromBitmapData(Assets.getBitmapData(path));
 		else
-			frames = FlxGraphic.fromBitmapData(Assets.getBitmapData(MobileInputHandler.mobileFolderPath + 'MobilePad/Textures/default.png'));
+			frames = FlxGraphic.fromBitmapData(Assets.getBitmapData(MobileConfig.mobileFolderPath + 'MobilePad/Textures/default.png'));
 
 		var button = new MobileButton(x, y);
 		button.scale.set(scale, scale);
@@ -143,6 +154,23 @@ class MobilePad extends MobileInputHandler {
 
 		if (ColorS != -1) button.color = ColorS;
 		button.IDs = buttonIDs;
+		button.onDown.callback = () -> onButtonDown.dispatch(button, buttonIDs);
+		button.onOut.callback = button.onUp.callback = () -> onButtonUp.dispatch(button, buttonIDs);
 		return button;
+	}
+
+	/**
+	 * Clean up memory.
+	 */
+	override function destroy():Void
+	{
+		super.destroy();
+		onButtonUp.destroy();
+		onButtonDown.destroy();
+
+		DPads = [];
+		Actions = [];
+		buttonIndexFromName = [];
+		buttonFromName = [];
 	}
 }

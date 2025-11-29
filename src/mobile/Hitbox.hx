@@ -16,12 +16,20 @@ import flixel.FlxCamera;
  */
 class Hitbox extends MobileInputHandler
 {
+	public var onButtonDown:FlxTypedSignal<(MobileButton, Array<String>) -> Void> = new FlxTypedSignal<(MobileButton, Array<String>) -> Void>();
+	public var onButtonUp:FlxTypedSignal<(MobileButton, Array<String>) -> Void> = new FlxTypedSignal<(MobileButton, Array<String>) -> Void>();
 	public var instance:MobileInputHandler;
 	public var Hints:Array<MobileButton> = [];
-	public var getButtonIndexFromName:Map<String, Int> = [];
-	public var getButtonFromName:Map<String, MobileButton> = [];
+	public var buttonIndexFromName:Map<String, Int> = [];
+	public var buttonFromName:Map<String, MobileButton> = [];
 	public var globalAlpha:Float = 0.7;
 	public var buttonCameras(get, set):Array<FlxCamera>;
+
+	public function getButtonIndexFromName(btnName:String)
+		return buttonIndexFromName.get(btnName);
+
+	public function getButtonFromName(btnName:String)
+		return buttonFromName.get(btnName);
 
 	@:noCompletion
 	function get_buttonCameras():Array<FlxCamera>
@@ -42,41 +50,49 @@ class Hitbox extends MobileInputHandler
 	/**
 	 * Create the zone.
 	 */
-	public function new(Mode:String, globalAlpha:Float = 0.7):Void
+	public function new(Mode:String, globalAlpha:Float = 0.7, ?disableCreation:Bool):Void
 	{
 		instance = this;
 		super();
 		this.globalAlpha = globalAlpha;
 
-		if (!MobileInputHandler.hitboxModes.exists(Mode))
-			throw 'The Hitbox File doesn\'t exists.';
-
-		var countedIndex:Int = 0;
-		for (buttonData in MobileInputHandler.hitboxModes.get(Mode).hints)
+		if (!disableCreation)
 		{
-			var buttonName:String = buttonData.button;
-			var buttonIDs:Array<String> = buttonData.buttonIDs;
-			var buttonX:Float = buttonData.x;
-			var buttonY:Float = buttonData.y;
+			if (!MobileConfig.hitboxModes.exists(Mode))
+				throw 'The HitboxMode "$Mode" doesn\'t exists.';
 
-			var buttonWidth:Int = buttonData.width;
-			var buttonHeight:Int = buttonData.height;
+			for (buttonData in MobileConfig.hitboxModes.get(Mode).hints)
+			{
+				var buttonName:String = buttonData.button;
+				var buttonIDs:Array<String> = buttonData.buttonIDs;
+				var buttonX:Float = buttonData.x;
+				var buttonY:Float = buttonData.y;
 
-			var buttonColor = buttonData.color;
-			var buttonReturn = buttonData.returnKey;
+				var buttonWidth:Int = buttonData.width;
+				var buttonHeight:Int = buttonData.height;
 
-			var hint = createHint(buttonIDs, buttonX, buttonY, buttonWidth, buttonHeight, Util.colorFromString(buttonColor), buttonReturn);
-			Hints.push(hint);
-			add(hint);
-			getButtonFromName.set(buttonName, hint);
-			getButtonIndexFromName.set(buttonName, countedIndex);
-			countedIndex++;
+				var buttonColor = buttonData.color;
+				var buttonReturn = buttonData.returnKey;
+
+				addHint(buttonName, buttonIDs, buttonX, buttonY, buttonWidth, buttonHeight, Util.colorFromString(buttonColor), buttonReturn);
+			}
 		}
 
 		scrollFactor.set();
 		updateTrackedButtons();
 
 		instance = this;
+	}
+
+	var countedIndex:Int = 0;
+	public function addHint(Name:String, IDs:Array<String>, X:Float, Y:Float, Width:Int, Height:Int, Color:Int = 0xFFFFFF, ?buttonReturn:String)
+	{
+		var hint = createHint(IDs, X, Y, Width, Height, Color, buttonReturn);
+		Hints.push(hint);
+		add(hint);
+		buttonFromName.set(Name, hint);
+		buttonIndexFromName.set(Name, countedIndex);
+		countedIndex++;
 	}
 
 	private function createHintGraphic(Width:Int, Height:Int, Color:Int = 0xFFFFFF, ?isLane:Bool = false):BitmapData
@@ -102,7 +118,7 @@ class Hitbox extends MobileInputHandler
 		return bitmap;
 	}
 
-	private function createHint(Name:Array<String>, X:Float, Y:Float, Width:Int, Height:Int, Color:Int = 0xFFFFFF, ?Return:String, ?Map:String):MobileButton
+	public function createHint(Name:Array<String>, X:Float, Y:Float, Width:Int, Height:Int, Color:Int = 0xFFFFFF, ?Return:String, ?Map:String):MobileButton
 	{
 		var hint:MobileButton = new MobileButton(X, Y, Return);
 		hint.loadGraphic(createHintGraphic(Width, Height, Color));
@@ -114,11 +130,13 @@ class Hitbox extends MobileInputHandler
 		hint.IDs = Name;
 		hint.onDown.callback = function()
 		{
+			onButtonDown.dispatch(hint, Name);
 			if (hint.alpha != globalAlpha)
 				hint.alpha = globalAlpha;
 		}
 		hint.onOut.callback = hint.onUp.callback = function()
 		{
+			onButtonUp.dispatch(hint, Name);
 			if (hint.alpha != 0.00001)
 				hint.alpha = 0.00001;
 		}
@@ -126,5 +144,19 @@ class Hitbox extends MobileInputHandler
 		hint.ignoreDrawDebug = true;
 		#end
 		return hint;
+	}
+
+	/**
+	 * Clean up memory.
+	 */
+	override function destroy():Void
+	{
+		super.destroy();
+		onButtonUp.destroy();
+		onButtonDown.destroy();
+
+		Hints = [];
+		buttonIndexFromName = [];
+		buttonFromName = [];
 	}
 }
