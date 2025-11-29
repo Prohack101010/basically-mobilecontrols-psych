@@ -1,0 +1,40 @@
+{
+  "buttons": [
+    {
+      "button": "buttonE",
+      "buttonIDs": ["buttonE"],
+      "graphic": "e",
+      "x": 625,
+      "y": 260,
+      "color": "0xFF7D00",
+      "scale": 0.7
+    },
+    {
+      "button": "buttonB",
+      "buttonIDs": ["buttonB"],
+      "graphic": "b",
+      "x": 625,
+      "y": 340,
+      "color": "0xFFCB00",
+      "scale": 0.7
+    },
+    {
+      "button": "buttonA",
+      "buttonIDs": ["buttonA"],
+      "graphic": "a",
+      "x": 710,
+      "y": 340,
+      "color": "0xFF0000",
+      "scale": 0.7
+    },
+    {
+      "button": "buttonC",
+      "buttonIDs": ["buttonC"],
+      "graphic": "c",
+      "x": 710,
+      "y": 260,
+      "color": "0x44FF00",
+      "scale": 0.7
+    }
+  ]
+}

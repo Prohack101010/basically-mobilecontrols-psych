@@ -1,0 +1,40 @@
+{
+  "hints": [
+    {
+      "button": "buttonLeft",
+      "buttonIDs": ["buttonLeft"],
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 720,
+      "color": "0xFFC24B99"
+    },
+    {
+      "button": "buttonDown",
+      "buttonIDs": ["buttonDown"],
+      "x": 320,
+      "y": 0,
+      "width": 320,
+      "height": 720,
+      "color": "0xFF00FFFF"
+    },
+    {
+      "button": "buttonUp",
+      "buttonIDs": ["buttonUp"],
+      "x": 640,
+      "y": 0,
+      "width": 320,
+      "height": 720,
+      "color": "0xFF12FA05"
+    },
+    {
+      "button": "buttonRight",
+      "buttonIDs": ["buttonRight"],
+      "x": 960,
+      "y": 0,
+      "width": 320,
+      "height": 720,
+      "color": "0xFFF9393F"
+    }
+  ]
+}
